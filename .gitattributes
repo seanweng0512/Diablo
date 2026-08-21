@@ -1,0 +1,31 @@
+# Line-ending policy.
+#
+# Without this file, what lands in a commit depends on each contributor's local
+# `core.autocrlf` setting, which is how a repository ends up with whole files
+# showing as changed when only a line or two was edited. Declaring it here makes
+# the behaviour a property of the project instead of the machine.
+
+# Store text as LF in the repository; check out native in the working tree.
+* text=auto
+
+# Windows shells can misparse a script that arrives with LF endings, so these
+# stay CRLF regardless of platform.
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Tools that read these expect LF even on Windows.
+*.sh   text eol=lf
+*.mjs  text eol=lf
+
+# Keep diffs on lockfiles quiet and never merge them by hand.
+package-lock.json -diff linguist-generated
+
+# Binary: never diff or normalize these.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.db   binary
