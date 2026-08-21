@@ -1,0 +1,99 @@
+# Discord Copilot Agent Bridge — configuration (spec §42)
+#
+# Copy this file to config/config.yaml and edit. config/config.yaml is
+# gitignored; secrets belong in the environment, referenced as ${VAR}.
+
+discord:
+  token: ${DISCORD_TOKEN}
+  # Optional: restrict the bot to specific guilds. Empty = any guild it joins.
+  allowed_guilds: []
+
+projects:
+  # A project is the isolation boundary (§4). The key is the project id.
+  backend:
+    name: Backend
+    path: C:/Projects/Backend
+
+    discord_enabled: true
+    discord:
+      # A channel maps to exactly one project (§8). Right-click the channel in
+      # Discord with Developer Mode on -> Copy Channel ID.
+      channel_id: "123456789012345678"
+
+    memory:
+      enabled: true
+
+    security:
+      require_approval: true
+
+      # REQUIRED when discord_enabled is true (§25). The Bridge refuses to start
+      # if both lists are empty, rather than letting anyone approve Copilot's
+      # actions. Discord user IDs:
+      allowed_users:
+        - "234567890123456789"
+      # Role names or role IDs:
+      allowed_roles:
+        - "Developer"
+
+      # Leave false. ACP's `allow_always` outcome makes Copilot stop asking for
+      # matching actions altogether, creating an approval path the Bridge cannot
+      # see or audit (§21, §26).
+      allow_always: false
+
+      # Commands the Bridge refuses outright, without asking a human.
+      # Case-insensitive regular expressions, matched against the shell command.
+      deny_patterns:
+        - "rm\\s+-rf\\s+/"
+        - "git\\s+push\\s+.*--force(?!-with-lease)"
+        - "^\\s*shutdown\\b"
+
+    copilot:
+      # Omit to use whatever the Copilot CLI defaults to.
+      model: claude-sonnet-5
+      mode: agent
+      additional_directories: []
+
+  # Discord is optional (§6.2). This project works purely through the CLI
+  # provider; the Bridge will not listen for or send any Discord traffic for it.
+  frontend:
+    name: Frontend
+    path: C:/Projects/Frontend
+
+    discord_enabled: false
+
+    memory:
+      enabled: true
+
+    security:
+      require_approval: true
+
+copilot:
+  executable: copilot
+  # `--acp` is always added by the Bridge; put any extra flags here.
+  args: []
+  startup_timeout_ms: 60000
+  env: {}
+
+approval:
+  # §41 — 30 minutes. Expiry never approves anything; it only marks the request
+  # stale and leaves the session in WaitingForApproval.
+  timeout_ms: 1800000
+
+sessions:
+  # Each session gets its own Copilot process (§15), so this bounds memory use.
+  max_concurrent_per_project: 4
+  # Reap Copilot processes idle for this long. 0 disables reaping.
+  idle_timeout_ms: 3600000
+
+output:
+  # §29 — Copilot's internal reasoning is noisy; off by default.
+  show_thoughts: false
+  flush_interval_ms: 1200
+  max_message_chars: 1900
+  # Replies longer than this are attached as a .md file instead (§28).
+  attach_threshold_chars: 6000
+
+storage:
+  provider: sqlite
+  # A bare path also works, e.g. `agent.db`.
+  connection_string: "Data Source=agent.db"

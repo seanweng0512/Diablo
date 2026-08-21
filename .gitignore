@@ -1,0 +1,18 @@
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Secrets — never commit (spec §42)
+.env
+.env.local
+config/config.yaml
+
+# Machine-local editor/agent state
+.claude/settings.local.json
+
+# Runtime state
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+logs/
